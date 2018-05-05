@@ -1,0 +1,34 @@
+#cloud-config  
+chpasswd: { expire: False }  
+hostname: sed_change_vm_name
+ssh_pwauth: True  
+ssh_authorized_keys: 
+  - sed_change_public_key
+write_files: 
+  - content: |
+        #!/bin/bash
+
+        function vxlan_conf {
+          ip link add SED_VXLAN_IF type vxlan id SED_VXLAN_ID remote SED_VM1_INTERNAL_IP local SED_VM2_INTERNAL_IP dstport 4789
+          ip link set SED_VXLAN_IF up
+          ip addr add SED_VM2_VXLAN_IP/24 dev SED_VXLAN_IF
+        }
+
+        function install_docker {
+          apt-get update
+          apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          add-apt-repository \
+              "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+              $(lsb_release -cs) \
+              stable"
+          apt-get update
+          apt-get install -y docker-ce
+        }
+
+        vxlan_conf
+        install_docker 
+    path: /start.sh
+    permissions: 0755
+runcmd:
+  - ./start.sh

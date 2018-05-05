@@ -1,0 +1,6 @@
+*.swp
+*.img
+purge.sh
+networks/
+config-drives/
+
